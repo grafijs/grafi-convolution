@@ -85,6 +85,10 @@
         for (x = r; x < width - r; x++) {
           i = (x + y * width) * colorDepth + ch
           if (ch === 3) {
+            if (colorDepth === 4 && option.monochrome) {
+              newPixelData[x + y * width] = imgData.data[x + y * width]
+              continue
+            }
             newPixelData[i] = imgData.data[i]
             continue
           }
@@ -96,12 +100,29 @@
             }
           }
           sum = arr.map(function (data, index) { return data * f[index]}).reduce(function (p, n) { return p + n })
+          if (colorDepth === 4 && option.monochrome) {
+            newPixelData[(x + y * width)] = sum / option.divisor
+            continue
+          }
           newPixelData[i] = sum / option.divisor
         }
       }
 
       for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
+          if (colorDepth === 4 && option.monochrome) {
+            // copy colors from top & bottom rows
+            if (y < r || y > height - (r * 2)) {
+              newPixelData[x + y * width] = imgData.data[x + y * width]
+              continue
+            }
+            // copy colors from left and write columns
+            if (x < r || x > width - (r * 2)) {
+              newPixelData[x + y * width] = imgData.data[x + y * width]
+            }
+            continue
+          }
+
           i = (x + y * width) * colorDepth + ch
           // copy colors from top & bottom rows
           if (y < r || y > height - (r * 2)) {

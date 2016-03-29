@@ -17,10 +17,12 @@
       output.width = original.width
       output.height = original.height
       outputCtx.drawImage(original, 0, 0)
-      var f = [1,2,1,2,4,2,1,2,1]
-      var d = 16
+      // var f = [1,2,1,2,4,2,1,2,1]
+      // var d = 16
+      var f = [0,-2,0,-2,9,-2,0,-2,0]
+      var d = 1
       var r = 1
-      newImage = grafi.convolution(outputCtx.getImageData(0, 0, original.width, original.height), {filter: f, divisor: d, radius: r})
+      newImage = grafi.convolution(outputCtx.getImageData(0, 0, original.width, original.height), {filter: f, divisor: d, radius: r, monochrome:true})
       outputCtx.putImageData(newImage, 0, 0)
       console.log(newImage.data)
     }
