@@ -14,7 +14,7 @@ function convolution (imgData, option) {
   // check options object & set default variables
   option = option || {}
   option.monochrome = option.monochrome || false
-  option.divisor =  option.divisor || 1
+  option.divisor = option.divisor || 1
   if (!option.filter || !option.radius) {
     throw new Error('Required options missing. filter : ' + option.filter + ', radius: ' + option.radius)
   }
@@ -28,56 +28,47 @@ function convolution (imgData, option) {
   }
   var newPixelData = new Uint8ClampedArray(pixelSize * (option.monochrome || 4))
 
-  var channels = colorDepth === 1 ? 1 : 3
   var height = imgData.height
   var width = imgData.width
   var f = option.filter
-  console.log(f)
-  console.log(f.length)
   var r = option.radius
-  var fSize = r * 2
-  var c, p, ch, y, x, fy, fx, _arr, _sum, _i
+  var ch, y, x, fy, fx, arr, sum, i
 
-  // create container for each color channel
-  var channelsData =[]
-  for (c = 0; c < channels; c++) {
-    channelsData.push(new Uint8ClampedArray(pixelSize))
-  }
-  // put data in each channel arrays
-  for (p = 0; p < pixelSize; p++) {
-    if (colorDepth === 1) {
-      channelsData[0][p] = imgData.data[p]
-      continue
-    }
-      channelsData[0][p] = imgData.data[p * colorDepth ]
-      channelsData[1][p] = imgData.data[p * colorDepth + 1]
-      channelsData[2][p] = imgData.data[p * colorDepth + 2]
-  }
-
-  // console.log(channelsData  )
-
-  // // do convolution for each channel
-  for (ch = 0; ch < colorDepth; ch++){
+  // do convolution math for each channel
+  for (ch = 0; ch < colorDepth; ch++) {
     for (y = r; y < height - r; y++) {
       for (x = r; x < width - r; x++) {
-        _i = x + y * width
-        if(ch === 3){
-          // console.log(imgData.data[_i * colorDepth + ch])
-          newPixelData[_i * colorDepth + ch] = imgData.data[_i * colorDepth + ch]
+        i = (x + y * width) * colorDepth + ch
+        if (ch === 3) {
+          newPixelData[i] = imgData.data[i]
           continue
         }
 
-        _arr = []
-        for (fy = -r; fy < fSize; fy++) {
-          for (fx = -r; fx < fSize; fx++) {
-              _arr.push(channelsData[ch][x + fx + (y + fy) * width])
+        arr = []
+        for (fy = -r; fy < r * 2; fy++) {
+          for (fx = -r; fx < r * 2; fx++) {
+            arr.push(imgData.data[(x + fx + (y + fy) * width) * colorDepth + ch])
           }
         }
-        _sum = _arr.map(function(e, i) {return e * f[i]}).reduce( function(p, n) {return p + n} )
-        newPixelData[_i * colorDepth + ch] = _sum / option.divisor
+        sum = arr.map(function (data, index) { return data * f[index] }).reduce(function (p, n) { return p + n })
+        newPixelData[i] = sum / option.divisor
+      }
+    }
+
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        i = (x + y * width) * colorDepth + ch
+        // copy colors from top & bottom rows
+        if (y < r || y > height - (r * 2)) {
+          newPixelData[i] = imgData.data[i]
+          continue
+        }
+        // copy colors from left and write columns
+        if (x < r || x > width - (r * 2)) {
+          newPixelData[i] = imgData.data[i]
+        }
       }
     }
   }
-
   return formatter(newPixelData, imgData.width, imgData.height)
 }
