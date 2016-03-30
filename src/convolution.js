@@ -15,6 +15,7 @@ function convolution (imgData, option) {
   option = option || {}
   option.monochrome = option.monochrome || false
   option.divisor = option.divisor || 1
+  option.median = option.median || false
   if (!option.filter || !option.radius) {
     throw new Error('Required options missing. filter : ' + option.filter + ', radius: ' + option.radius)
   }
@@ -32,7 +33,7 @@ function convolution (imgData, option) {
   var width = imgData.width
   var f = option.filter
   var r = option.radius
-  var ch, y, x, fy, fx, arr, sum, i
+  var ch, y, x, fy, fx, arr, s, result, i
 
   // do convolution math for each channel
   for (ch = 0; ch < colorDepth; ch++) {
@@ -54,12 +55,16 @@ function convolution (imgData, option) {
             arr.push(imgData.data[(x + fx + (y + fy) * width) * colorDepth + ch])
           }
         }
-        sum = arr.map(function (data, index) { return data * f[index] }).reduce(function (p, n) { return p + n })
+
+        result = option.median
+                  ? arr.sort()[Math.floor(arr.length/2)]
+                  : arr.map(function (data, index) { return data * f[index] }).reduce(function (p, n) { return p + n }) / option.divisor
+
         if (colorDepth === 4 && option.monochrome) {
-          newPixelData[(x + y * width)] = sum / option.divisor
+          newPixelData[(x + y * width)] = result
           continue
         }
-        newPixelData[i] = sum / option.divisor
+        newPixelData[i] = result
       }
     }
 
